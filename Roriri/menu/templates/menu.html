@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menu</title>
+    {% include 'navbar.html'%}
 <style>
     /* General Reset */
 * {
@@ -162,21 +163,21 @@ label {
                     placeholder="Search by name..." 
                     value="{{ request.GET.search }}" 
                     class="search-bar">
+                    <button type="submit" class="btn">Search</button>
 
+                    <input 
+                    type="date" 
+                    name="from_date" 
+                    value="{{ request.GET.from_date }}" 
+                    class="price-input" 
+                    placeholder="From Date">
+            
                 <input 
-                    type="number" 
-                    name="min_price" 
-                    placeholder="Min Price" 
-                    value="{{ request.GET.min_price }}" 
-                    class="price-input">
-
-                <input 
-                    type="number" 
-                    name="max_price" 
-                    placeholder="Max Price" 
-                    value="{{ request.GET.max_price }}" 
-                    class="price-input">
-
+                    type="date" 
+                    name="to_date" 
+                    value="{{ request.GET.to_date }}" 
+                    class="price-input" 
+                    placeholder="To Date">
                 <select name="category" class="select-dropdown">
                     <option value="">All Categories</option>
                     <option value="snacks" {% if request.GET.category == 'snacks' %}selected{% endif %}>Snacks</option>
@@ -184,36 +185,32 @@ label {
                     <option value="desserts" {% if request.GET.category == 'desserts' %}selected{% endif %}>Desserts</option>
                 </select>
 
-                <label>
-                    <input 
-                        type="checkbox" 
-                        name="is_vegetarian" 
-                        value="True" 
-                        {% if request.GET.is_vegetarian == 'True' %}checked{% endif %}>
-                    Vegetarian Only
-                </label>
-
+              
                 <button type="submit" class="btn">Apply Filters</button>
             </form>
         </div>
 
-        <!-- Menu Items -->
-        <div class="menu-items">
-            {% for item in items %}
-                <div class="menu-card">
-                    <img src="{{ item.image.url }}" alt="{{ item.name }}" class="menu-image">
-                    <div class="menu-content">
-                        <h3>{{ item.name }}</h3>
-                        <p>{{ item.description }}</p>
-                        <p><strong>Price:</strong> ₹{{ item.price }}</p>
-                        <p><strong>Category:</strong> {{ item.category }}</p>
-                        <p><strong>Vegetarian:</strong> {{ item.is_vegetarian|yesno:"Yes,No" }}</p>
-                    </div>
-                </div>
-            {% empty %}
-                <p class="no-results">No items found matching your criteria.</p>
-            {% endfor %}
+   <!-- Menu Items -->
+<div class="menu-items">
+    {% for item in items %}
+        <div class="menu-card">
+            <img src="{{ item.image.url }}" alt="{{ item.name }}" class="menu-image">
+            <div class="menu-content">
+                <h3>{{ item.name }}</h3>
+                <p>{{ item.description }}</p>
+                <p><strong>Price:</strong> ₹{{ item.price }}</p>
+                <p><strong>Category:</strong> {{ item.category }}</p>
+                <!-- Add Button -->
+                <form method="POST" action="{% url 'add_to_cart' item.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn">Add to Cart</button>
+                </form>
+            </div>
         </div>
-    </div>
+    {% empty %}
+        <p class="no-results">No items found matching your criteria.</p>
+    {% endfor %}
+</div>
+
 </body>
 </html>

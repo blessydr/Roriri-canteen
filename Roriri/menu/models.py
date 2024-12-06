@@ -6,6 +6,8 @@ class MenuItem(models.Model):
     description = models.TextField()
     price = models.DecimalField(max_digits=6, decimal_places=2)
     image = models.ImageField(upload_to='menu_images/', blank=True, null=True)
+    stock = models.PositiveIntegerField(default=0)  # Stock quantity
+
     category = models.CharField(max_length=50, choices=[
         ('Snacks', 'Snacks'),
         ('Beverages', 'Beverages'),
@@ -30,6 +32,7 @@ class CartItem(models.Model):
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     items = models.ManyToManyField(MenuItem)
+    order_id = models.CharField(max_length=126)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, default="Pending", choices=[
         ('Pending', 'Pending'),

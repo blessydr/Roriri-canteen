@@ -74,7 +74,34 @@ body {
   color: #666;
 }
 
-/* Remove Button */
+/* Increase and Decrease Buttons */
+.item-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.item-actions form {
+  display: inline-block;
+}
+
+.btn-increase,
+.btn-decrease {
+  background-color: #42a5f5;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-increase:hover,
+.btn-decrease:hover {
+  background-color: #3785c1;
+}
+
 .item-actions .btn-remove {
   background: #f44336;
   color: #ffffff;
@@ -176,6 +203,8 @@ body {
             <p class="item-total">Total: ${{ item.total_price }}</p>
           </div>
           <div class="item-actions">
+         
+            <!-- Remove Button -->
             <a href="{% url 'remove_from_cart' item.id %}" class="btn-remove">
               <i class="fas fa-trash-alt"></i> Remove
             </a>
@@ -188,8 +217,7 @@ body {
     <div class="cart-summary">
       <p class="total-price"><strong>Total: ${{ total }}</strong></p>
       <div class="cart-actions">
-        <a href="{% url 'menu_list' %}" class="btn-continue">Continue Shopping</a>
-        <a href="{% url 'checkout' %}" class="btn-checkout">Checkout</a>
+        <a href="{% url 'create_order' %}" class="btn-continue">Continue Shopping</a>
       </div>
     </div>
   </div>
