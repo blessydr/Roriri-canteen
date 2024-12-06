@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* General Styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Arial', sans-serif;
+  background: #f4f4f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+/* Checkout Container */
+.checkout-container {
+  width: 100%;
+  max-width: 600px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Title */
+.checkout-title {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* Order Details */
+.order-details {
+  margin-bottom: 20px;
+}
+
+.order-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+.order-date {
+  font-size: 14px;
+  color: #666;
+}
+
+/* Items List */
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.item-info h3 {
+  font-size: 16px;
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+.item-info p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+/* Order Summary */
+.order-summary {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 16px;
+  color: #333;
+}
+
+.summary-line {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.total-amount {
+  color: #4caf50;
+}
+
+/* Checkout Actions */
+.checkout-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.checkout-actions a {
+  text-decoration: none;
+  padding: 10px 15px;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 5px;
+  transition: background 0.3s;
+}
+
+.btn-back {
+  background: #42a5f5;
+  color: #ffffff;
+}
+
+.btn-back:hover {
+  background: #3785c1;
+}
+
+.btn-view-orders {
+  background: #4caf50;
+  color: #ffffff;
+}
+
+.btn-view-orders:hover {
+  background: #388e3c;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .order-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .checkout-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="checkout-container">
+    <h1 class="checkout-title">Order Summary</h1>
+    <div class="order-details">
+      <h2 class="order-title">Order ID: #{{ order.id }}</h2>
+      <p class="order-date">Date: {{ order.created_at|date:"M d, Y H:i" }}</p>
+    </div>
+
+    <div class="items-list">
+      {% for item in order.items.all %}
+        <div class="order-item">
+          <div class="item-info">
+            <h3 class="item-name">{{ item.name }}</h3>
+            <p class="item-price">Price: ${{ item.price }}</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="order-summary">
+      <p class="summary-line">
+        <strong>Total Amount:</strong>
+        <span class="total-amount">${{ order.total_amount }}</span>
+      </p>
+    </div>
+
+    <div class="checkout-actions">
+      <a href="{% url 'menu_list' %}" class="btn-back">Continue Shopping</a>
+      <a href="{% url 'order_history' %}" class="btn-view-orders">View Orders</a>
+    </div>
+  </div>
+</body>
+</html>

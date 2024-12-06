@@ -1,0 +1,122 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body Styling */
+body {
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(to right, #4CAF50, #87CEEB);
+    color: #333;
+}
+
+/* Container */
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 20px;
+}
+
+/* Message Box */
+.message-box {
+    background: #fff;
+    padding: 30px 20px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    max-width: 400px;
+    width: 100%;
+}
+
+/* Success and Failure Styling */
+.success img {
+    width: 80px;
+    margin-bottom: 20px;
+}
+
+.failure img {
+    width: 80px;
+    margin-bottom: 20px;
+}
+
+.success h1 {
+    color: #4CAF50;
+}
+
+.failure h1 {
+    color: #F44336;
+}
+
+/* Paragraph and Details */
+.message-box p {
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+.details {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    text-align: left;
+    font-size: 14px;
+}
+
+.details p {
+    margin: 5px 0;
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    background: #4CAF50;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    text-decoration: none;
+    transition: background 0.3s ease;
+}
+
+.btn:hover {
+    background: #388E3C;
+}
+
+.btn.retry {
+    background: #F44336;
+    margin-left: 10px;
+}
+
+.btn.retry:hover {
+    background: #D32F2F;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .message-box {
+        padding: 20px;
+    }
+
+    .message-box h1 {
+        font-size: 20px;
+    }
+
+    .message-box p {
+        font-size: 14px;
+    }
+
+    .btn {
+        font-size: 14px;
+        padding: 8px 16px;
+    }
+}

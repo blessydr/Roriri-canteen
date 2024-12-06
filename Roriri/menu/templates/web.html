@@ -1,0 +1,677 @@
+<style>
+        /* General Styles */
+        body {
+          font-family: 'Inter', sans-serif;
+          background-color: #f9fafb;
+        }
+        .text-gray-800 {
+          color: #1f2937;
+        }
+        .text-gray-400 {
+          color: #9ca3af;
+        }
+        /* Cart Section */
+    .cart-section {
+      display: none;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      background-color: #ffffff;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .cart-section.visible {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Responsive Grid */
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+    .grid-cols-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    @media (max-width: 1024px) {
+      .grid-cols-3 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 768px) {
+      .grid-cols-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Buttons */
+    .btn {
+      cursor: pointer;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .btn-add {
+      background-color: #3b82f6;
+      color: white;
+    }
+    .btn-add:hover {
+      background-color: #2563eb;
+    }
+    .btn-clear {
+      background-color: #ef4444;
+      color: white;
+    }
+    .btn-clear:hover {
+      background-color: #dc2626;
+    }
+    .btn-checkout {
+      background-color: #10b981;
+      color: white;
+    }
+    .btn-checkout:hover {
+      background-color: #059669;
+    }
+        /* Product Card */
+        .product-card {
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          overflow: hidden;
+          background-color: #ffffff;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          cursor: pointer;
+        }
+        .product-card img {
+          object-fit: cover;
+          width: 100%;
+          height: 150px;
+        }
+        .product-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+      
+        /* Receipt */
+        .receipt {
+          font-family: 'Courier New', monospace;
+          background-color: #ffffff;
+          border-radius: 12px;
+          padding: 20px;
+          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        @media print {
+          .no-print {
+            display: none;
+          }
+          .receipt {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+        }
+      
+        /* Buttons */
+        .category-btn {
+          background-color: #ffffff;
+          color: #1f2937;
+          border: 1px solid #e5e7eb;
+          padding: 10px 20px;
+          border-radius: 25px;
+          transition: background-color 0.3s ease, color 0.3s ease;
+          white-space: nowrap;
+        }
+        .category-btn:hover {
+          background-color: #3b82f6;
+          color: #ffffff;
+        }
+        .category-btn.active {
+          background-color: #3b82f6;
+          color: #ffffff;
+        }
+      
+        /* Cart Section */
+        .cart-section {
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          background-color: #ffffff;
+          padding: 20px;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+      
+        /* Responsive Grid */
+        .grid {
+          display: grid;
+          gap: 16px;
+        }
+        .grid-cols-3 {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        @media (max-width: 1024px) {
+          .grid-cols-3 {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+        @media (max-width: 768px) {
+          .grid-cols-3 {
+            grid-template-columns: 1fr;
+          }
+        }
+      
+        /* Input Search */
+        .search-input {
+          padding: 8px 16px;
+          border: 1px solid #e5e7eb;
+          border-radius: 25px;
+          width: 100%;
+          transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .search-input:focus {
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+          outline: none;
+        }
+      
+        /* Checkout Button */
+        .checkout-btn {
+          background-color: #10b981;
+          color: white;
+          font-weight: bold;
+          padding: 12px;
+          border-radius: 10px;
+          text-align: center;
+          transition: background-color 0.3s ease;
+        }
+        .checkout-btn:hover {
+          background-color: #059669;
+        }
+      </style>
+      
+<body class="bg-gray-50">
+    <div class="flex h-screen">
+      <!-- Products Section -->
+      <div class="w-2/3 p-6 overflow-y-auto no-print">
+        <div class="flex justify-between items-center mb-6">
+          <h1 class="text-3xl font-bold text-gray-800">POS System</h1>
+          <div class="relative">
+            <input type="text" id="search" placeholder="Search products..." class="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+          </div>
+        </div>
+  
+        <!-- Categories Section -->
+        <div class="flex space-x-4 mb-6 overflow-x-auto py-2">
+          <button class="category-btn active px-4 py-2 rounded-full border transition-colors" data-category="all">
+            All Items
+          </button>
+          <button class="category-btn px-4 py-2 rounded-full border transition-colors" data-category="main">
+            Main Course
+          </button>
+          <button class="category-btn px-4 py-2 rounded-full border transition-colors" data-category="drinks">
+            Drinks
+          </button>
+          <button class="category-btn px-4 py-2 rounded-full border transition-colors" data-category="desserts">
+            Desserts
+          </button>
+        </div>
+  
+        <div class="grid grid-cols-3 gap-6" id="products">
+          <!-- Product cards will be dynamically inserted here -->
+        </div>
+      </div>
+  
+      <!-- Cart Section -->
+      <div class="w-1/3 bg-white shadow-lg p-6 flex flex-col">
+        <div class="flex-1 overflow-y-auto mb-4">
+          <h2 class="text-2xl font-bold mb-4 text-gray-800">Current Order</h2>
+          <div id="cart-items" class="space-y-4">
+            <!-- Cart items will be dynamically inserted here -->
+          </div>
+        </div>
+  
+        <div class="border-t pt-4">
+          <div class="flex justify-between text-lg mb-2">
+            <span>Subtotal:</span>
+            <span id="subtotal">$0.00</span>
+          </div>
+          <div class="flex justify-between text-lg mb-2">
+            <span>Tax (10%):</span>
+            <span id="tax">$0.00</span>
+          </div>
+          <div class="flex justify-between text-xl font-bold">
+            <span>Total:</span>
+            <span id="total">$0.00</span>
+          </div>
+  
+          <div class="grid grid-cols-2 gap-4 mt-6">
+            <button onclick="clearCart()" class="bg-red-500 text-white py-3 px-4 rounded-lg hover:bg-red-600 transition-colors">
+              <i class="fas fa-trash mr-2"></i>Clear
+            </button>
+            <button onclick="checkout()" class="bg-green-500 text-white py-3 px-4 rounded-lg hover:bg-green-600 transition-colors">
+              <i class="fas fa-check mr-2"></i>Checkout
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Receipt Template (Hidden by default) -->
+    <div id="receipt" class="receipt hidden fixed inset-0 bg-white p-8" style="width: 300px; margin: auto;">
+      <!-- Receipt content will be dynamically inserted here -->
+    </div>
+
+
+    <script>
+       // Sample product data with categories
+const products = [
+{
+  id: 1,
+  name: "Burger",
+  price: 9.99,
+  category: "main",
+  image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300"
+},
+{
+  id: 2,
+  name: "Pizza",
+  price: 12.99,
+  category: "main",
+  image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=300"
+},
+{
+  id: 3,
+  name: "Salad",
+  price: 7.99,
+  category: "main",
+  image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300"
+},
+{
+  id: 4,
+  name: "Pasta",
+  price: 11.99,
+  category: "main",
+  image: "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=300"
+},
+{
+  id: 5,
+  name: "Coffee",
+  price: 3.99,
+  category: "drinks",
+  image: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300"
+},
+{
+  id: 6,
+  name: "Ice Cream",
+  price: 6.99,
+  category: "desserts",
+  image: "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=300"
+},
+{
+  id: 7,
+  name: "Smoothie",
+  price: 4.99,
+  category: "drinks",
+  image: "https://images.unsplash.com/photo-1505252585461-04db1eb84625?w=300"
+},
+{
+  id: 8,
+  name: "Cheesecake",
+  price: 5.99,
+  category: "desserts",
+  image: "https://images.unsplash.com/photo-1508737027454-e6454ef45afd?w=300"
+}
+];
+
+let cart = [];
+let currentCategory = "all";
+
+// Initialize products
+function initProducts(category = "all") {
+const productsContainer = document.getElementById("products");
+const filteredProducts =
+  category === "all"
+    ? products
+    : products.filter((p) => p.category === category);
+
+productsContainer.innerHTML = filteredProducts
+  .map(
+    (product) => `
+              <div class="product-card bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300">
+                  <img src="${product.image}" alt="${
+      product.name
+    }" class="w-full h-48 object-cover">
+                  <div class="p-4">
+                      <h3 class="text-lg font-semibold">${product.name}</h3>
+                      <p class="text-gray-600">$${product.price.toFixed(
+                        2
+                      )}</p>
+                      <button onclick="addToCart(${product.id})" 
+                              class="mt-2 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                          Add to Cart
+                      </button>
+                  </div>
+              </div>
+          `
+  )
+  .join("");
+}
+
+// Category buttons event listeners
+document.querySelectorAll(".category-btn").forEach((btn) => {
+btn.addEventListener("click", (e) => {
+  document
+    .querySelectorAll(".category-btn")
+    .forEach((b) => b.classList.remove("active"));
+  e.target.classList.add("active");
+  currentCategory = e.target.dataset.category;
+  initProducts(currentCategory);
+});
+});
+
+function addToCart(productId) {
+const product = products.find((p) => p.id === productId);
+const existingItem = cart.find((item) => item.id === productId);
+
+if (existingItem) {
+  existingItem.quantity++;
+} else {
+  cart.push({ ...product, quantity: 1 });
+}
+updateCart();
+}
+
+function updateCart() {
+const cartContainer = document.getElementById("cart-items");
+cartContainer.innerHTML = cart
+  .map(
+    (item) => `
+              <div class="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
+                  <div>
+                      <h4 class="font-semibold">${item.name}</h4>
+                      <p class="text-gray-600">$${item.price.toFixed(2)} x ${
+      item.quantity
+    }</p>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                      <button onclick="updateQuantity(${item.id}, ${
+      item.quantity - 1
+    })" 
+                              class="bg-gray-200 px-2 py-1 rounded">-</button>
+                      <span>${item.quantity}</span>
+                      <button onclick="updateQuantity(${item.id}, ${
+      item.quantity + 1
+    })" 
+                              class="bg-gray-200 px-2 py-1 rounded">+</button>
+                  </div>
+              </div>
+          `
+  )
+  .join("");
+
+updateTotals();
+}
+
+function updateQuantity(productId, newQuantity) {
+if (newQuantity < 1) {
+  cart = cart.filter((item) => item.id !== productId);
+} else {
+  const item = cart.find((item) => item.id === productId);
+  item.quantity = newQuantity;
+}
+updateCart();
+}
+
+function updateTotals() {
+const subtotal = cart.reduce(
+  (sum, item) => sum + item.price * item.quantity,
+  0
+);
+const tax = subtotal * 0.1;
+const total = subtotal + tax;
+
+document.getElementById("subtotal").textContent = `$${subtotal.toFixed(2)}`;
+document.getElementById("tax").textContent = `$${tax.toFixed(2)}`;
+document.getElementById("total").textContent = `$${total.toFixed(2)}`;
+}
+
+function clearCart() {
+cart = [];
+updateCart();
+}
+
+function checkout() {
+if (cart.length === 0) return;
+
+const receipt = document.getElementById("receipt");
+const subtotal = cart.reduce(
+  (sum, item) => sum + item.price * item.quantity,
+  0
+);
+const tax = subtotal * 0.1;
+const total = subtotal + tax;
+const orderNumber = Math.floor(Math.random() * 1000) + 1;
+
+// Sample products array
+const products = [
+  { id: 1, name: "Burger", price: 5.99 },
+  { id: 2, name: "Pizza", price: 7.99 },
+  { id: 3, name: "Coffee", price: 2.49 },
+];
+
+// Variables for cart data
+let cart = [];
+
+// Function to render products dynamically
+function renderProducts() {
+  const productsContainer = document.getElementById("products");
+  productsContainer.innerHTML = "";
+  products.forEach((product) => {
+    const productCard = document.createElement("div");
+    productCard.classList.add("product-card");
+    productCard.innerHTML = `
+      <img src="https://via.placeholder.com/150" alt="${product.name}">
+      <div class="p-4">
+        <h3 class="text-lg font-bold">${product.name}</h3>
+        <p class="text-gray-400">$${product.price.toFixed(2)}</p>
+        <button onclick="addToCart(${product.id})" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+          Add to Cart
+        </button>
+      </div>
+    `;
+    productsContainer.appendChild(productCard);
+  });
+}
+
+// Function to add a product to the cart
+function addToCart(productId) {
+  const product = products.find((p) => p.id === productId);
+  const existingItem = cart.find((item) => item.id === productId);
+
+  if (existingItem) {
+    existingItem.quantity += 1;
+  } else {
+    cart.push({ ...product, quantity: 1 });
+  }
+
+  renderCart();
+}
+
+// Function to render cart items dynamically
+function renderCart() {
+  const cartItemsContainer = document.getElementById("cart-items");
+  const subtotalElement = document.getElementById("subtotal");
+  const taxElement = document.getElementById("tax");
+  const totalElement = document.getElementById("total");
+
+  cartItemsContainer.innerHTML = "";
+  let subtotal = 0;
+
+  cart.forEach((item) => {
+    const cartItem = document.createElement("div");
+    cartItem.classList.add("flex", "justify-between", "items-center");
+
+    cartItem.innerHTML = `
+      <span>${item.name} (x${item.quantity})</span>
+      <span>$${(item.price * item.quantity).toFixed(2)}</span>
+    `;
+
+    subtotal += item.price * item.quantity;
+    cartItemsContainer.appendChild(cartItem);
+  });
+
+  const tax = subtotal * 0.1;
+  const total = subtotal + tax;
+
+  subtotalElement.textContent = `$${subtotal.toFixed(2)}`;
+  taxElement.textContent = `$${tax.toFixed(2)}`;
+  totalElement.textContent = `$${total.toFixed(2)}`;
+}
+
+// Function to clear the cart
+function clearCart() {
+  cart = [];
+  renderCart();
+}
+
+// Function to simulate checkout
+function checkout() {
+  if (cart.length === 0) {
+    alert("Your cart is empty!");
+    return;
+  }
+
+  alert("Thank you for your purchase!");
+  clearCart();
+}
+
+// Initial rendering
+renderProducts();
+renderCart();
+
+
+receipt.innerHTML = `
+              <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                  <div class="bg-white p-8 rounded-lg max-w-md w-full">
+                      <div class="text-center mb-6">
+                          <h2 class="text-2xl font-bold">Thank You For Your Order!</h2>
+                          <p class="text-gray-600">Order #${orderNumber}</p>
+                          <p class="text-gray-600">${new Date().toLocaleString()}</p>
+                      </div>
+                      <div class="border-t border-b py-4 mb-4">
+                          <div class="flex justify-between mb-2 font-bold">
+                              <span>Item</span>
+                              <span>Amount</span>
+                          </div>
+                          ${cart
+                            .map(
+                              (item) => `
+                              <div class="flex justify-between mb-2">
+                                  <span>${item.name} x${item.quantity}</span>
+                                  <span>$${(
+                                    item.price * item.quantity
+                                  ).toFixed(2)}</span>
+                              </div>
+                          `
+                            )
+                            .join("")}
+                      </div>
+                      <div class="space-y-2">
+                          <div class="flex justify-between">
+                              <span>Subtotal:</span>
+                              <span>$${subtotal.toFixed(2)}</span>
+                          </div>
+                          <div class="flex justify-between">
+                              <span>Tax (10%):</span>
+                              <span>$${tax.toFixed(2)}</span>
+                          </div>
+                          <div class="flex justify-between font-bold text-lg border-t pt-2">
+                              <span>Total:</span>
+                              <span>$${total.toFixed(2)}</span>
+                          </div>
+                      </div>
+                      <div class="mt-6 text-center text-gray-600">
+                          <p>Thank you for dining with us!</p>
+                          <p>Please come again</p>
+                      </div>
+                      <button onclick="printReceipt()" class="mt-6 w-full bg-blue-500 text-white py-2 rounded-lg no-print">
+                          Print Receipt
+                      </button>
+                  </div>
+              </div>
+          `;
+
+receipt.classList.remove("hidden");
+}
+
+function printReceipt() {
+try {
+  // Hide all elements except receipt before printing
+  const nonPrintElements = document.querySelectorAll(".no-print");
+  nonPrintElements.forEach((el) => (el.style.display = "none"));
+
+  // Make receipt visible and positioned for printing
+  const receipt = document.getElementById("receipt");
+  receipt.style.position = "absolute";
+  receipt.style.left = "0";
+  receipt.style.top = "0";
+  receipt.style.width = "100%";
+
+  // Print
+  window.print();
+
+  // Restore elements after printing
+  nonPrintElements.forEach((el) => (el.style.display = ""));
+  receipt.style.position = "";
+  receipt.style.left = "";
+  receipt.style.top = "";
+  receipt.style.width = "";
+
+  // Hide receipt and clear cart
+  receipt.classList.add("hidden");
+  clearCart();
+} catch (error) {
+  console.error("Error printing receipt:", error);
+}
+}
+
+// Initialize the POS system
+initProducts();
+
+// Search functionality
+document.getElementById("search").addEventListener("input", (e) => {
+const searchTerm = e.target.value.toLowerCase();
+const filteredProducts = products.filter(
+  (product) =>
+    product.name.toLowerCase().includes(searchTerm) &&
+    (currentCategory === "all" || product.category === currentCategory)
+);
+
+const productsContainer = document.getElementById("products");
+productsContainer.innerHTML = filteredProducts
+  .map(
+    (product) => `
+              <div class="product-card bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300">
+                  <img src="${product.image}" alt="${
+      product.name
+    }" class="w-full h-48 object-cover">
+                  <div class="p-4">
+                      <h3 class="text-lg font-semibold">${product.name}</h3>
+                      <p class="text-gray-600">$${product.price.toFixed(
+                        2
+                      )}</p>
+                      <button onclick="addToCart(${product.id})" 
+                              class="mt-2 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                          Add to Cart
+                      </button>
+                  </div>
+              </div>
+          `
+  )
+  .join("");
+});
+
+          
+    </script>
