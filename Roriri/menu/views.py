@@ -6,100 +6,92 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 import razorpay
 from django.conf import settings
-from django.http import JsonResponse
+from django.http import JsonResponse,HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
+from django.core.paginator import Paginator
+import json
+from django.forms import ValidationError
+from django.views import View
 
-razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
 
-# Create Razorpay Order
-def create_order(request):
-    if request.method == 'POST':
+def get_razorpay_client():
+    """Returns the razorpay client."""
+    return razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_SECRET_KEY) )
+
+def is_razorpay_payment_order_successful(order_id):
+    order_response = get_razorpay_client().order.fetch(order_id=order_id)
+    return order_response.get("status") in ["paid"]
+
+def create_razorpay_payment_order(amount, currency, receipt):
+    return get_razorpay_client().order.create(
+        data={
+            "amount": int(int(amount) * 100),  # amount in paise
+            "currency": currency,
+            "receipt": receipt,
+        }
+    )
+
+class CreateOrderView(View):
+    def post(self, request, *args, **kwargs):
         try:
-            # Get the amount from POST data
-            amount = int(request.POST.get('amount'))  # Amount in INR
-            if amount <= 0:
-                return JsonResponse({'error': 'Invalid amount'})
-
-            # Create a Razorpay Order
-            razorpay_order = razorpay_client.order.create({
-                'amount': amount * 100,  # Convert to paise
-                'currency': 'INR',
-                'payment_capture': '1',  # Auto-capture payment
-            })
-            # Save the order in the database
-            order = Order.objects.create(
-                user=request.user,
-                order_id=razorpay_order['id'],
-                total_amount=amount,
-            )
-
-            # Render the payment page
-            return render(request, 'payment_page.html', {
-                'razorpay_key_id': settings.RAZORPAY_KEY_ID,
-                'razorpay_order_id': razorpay_order['id'],
-                'amount': amount * 100,  # Convert to paise
-            })
-
+            data = json.loads(request.body)
+            amount = data.get("amount")
+            currency = data.get("currency", "INR")
+            receipt = data.get("receipt")
+            order = create_razorpay_payment_order(amount, currency, receipt)
+            return JsonResponse(order)
         except Exception as e:
-            return JsonResponse({'error': f"Order creation failed: {str(e)}"})
+            return JsonResponse({"error": str(e)})\
+                
+                
 
-    return render(request, 'create_order.html')
-
-
-# Handle Payment Success
-
-@csrf_exempt
-def payment_success(request):
-    if request.method == 'POST':
+class VerifyPaymentView(View):
+    def post(self, request, *args, **kwargs):
         try:
-            # Retrieve payment details
-            payment_id = request.POST.get('razorpay_payment_id')
-            order_id = request.POST.get('razorpay_order_id')
-            signature = request.POST.get('razorpay_signature')
-
-            if not (payment_id and order_id and signature):
-                return render(request, 'payment_failure.html', {'error': 'Payment details are missing.'})
+            # Parse JSON data from the request
+            data = json.loads(request.body)
+            payment_id = data.get("razorpay_payment_id")
+            order_id = data.get("razorpay_order_id")
+            signature = data.get("razorpay_signature")
+            amount = data.get("amount")
+            items = data.get("items")  # List of purchased item IDs
+            user_id = data.get("user_id")
 
             # Verify Razorpay payment signature
-            params = {
+            params_dict = {
                 'razorpay_order_id': order_id,
                 'razorpay_payment_id': payment_id,
                 'razorpay_signature': signature,
             }
-            razorpay_client.utility.verify_payment_signature(params)
+            get_razorpay_client.utility.verify_payment_signature(params_dict)
 
-            # Update order status in database
-            order = Order.objects.get(order_id=order_id)
-            order.payment_status = 'Completed'
-            order.save()
+            # Create or update the order
+            user = get_object_or_404(User, id=user_id)
+            order = Order.objects.create(
+                user=user,
+                order_id=order_id,
+                total_amount=amount,
+                status="Completed"
+            )
+            for item_id in items:
+                item = get_object_or_404(MenuItem, id=item_id)
+                order.items.add(item)
 
-            # Render success page
-            return render(request, 'payment_success.html', {
-                'order_id': order.order_id,
-                'total_amount': order.total_amount,
-            })
+            return JsonResponse({"status": "success", "message": "Payment verified and order saved."})
 
         except razorpay.errors.SignatureVerificationError:
-            return render(request, 'payment_failure.html', {
-                'error': 'Payment verification failed. Please try again.'
-            })
-
-        except Order.DoesNotExist:
-            return render(request, 'payment_failure.html', {
-                'error': 'Order not found. Please contact support.'
-            })
-
-    return JsonResponse({'error': 'Invalid request'})
-
-
-def payment_success(request):
-    return render(request, 'payment_success.html')
-
-def payment_failure(request):
-    return render(request, 'payment_failure.html')
+            return JsonResponse({"error": "Payment verification failed"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+        
+        
+def payment_form(request):
+    return render(request, 'menu.html', {
+        'RAZORPAY_KEY_ID': settings.RAZORPAY_KEY_ID
+    })
 
 from datetime import datetime
 
@@ -114,24 +106,18 @@ def menu_list(request):
     if search_query:
         items = items.filter(name__icontains=search_query)
     
-    if from_date:
-        try:
-            from_date_obj = datetime.strptime(from_date, '%Y-%m-%d')
-            items = items.filter(created_at__gte=from_date_obj)
-        except ValueError:
-            pass
-
-    if to_date:
-        try:
-            to_date_obj = datetime.strptime(to_date, '%Y-%m-%d')
-            items = items.filter(created_at__lte=to_date_obj)
-        except ValueError:
-            pass 
+    if from_date and to_date:
+        items = items.filter(created_at__date__range=[from_date, to_date])
 
     if category:
-        items = items.filter(category=category)
+        items = items.filter(category__iexact=category) 
+        
+                
+    paginator = Paginator(items, 6)  # Show 6 items per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
-    return render(request, 'menu.html', {'items': items})
+    return render(request, 'menu.html',{'items': page_obj, 'page_obj': page_obj})
 
 
 def user_login(request):

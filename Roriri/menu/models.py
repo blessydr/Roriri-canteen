@@ -7,7 +7,8 @@ class MenuItem(models.Model):
     price = models.DecimalField(max_digits=6, decimal_places=2)
     image = models.ImageField(upload_to='menu_images/', blank=True, null=True)
     stock = models.PositiveIntegerField(default=0)  # Stock quantity
-
+    created_at = models.DateTimeField(auto_now_add=True)  # Add this field
+    updated_at = models.DateTimeField(auto_now=True)
     category = models.CharField(max_length=50, choices=[
         ('Snacks', 'Snacks'),
         ('Beverages', 'Beverages'),
