@@ -8,7 +8,8 @@ import razorpay
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
 
 razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
@@ -49,31 +50,37 @@ def create_order(request):
 
 
 # Handle Payment Success
+
 @csrf_exempt
 def payment_success(request):
     if request.method == 'POST':
-        # Retrieve payment details from POST request
-        payment_id = request.POST.get('razorpay_payment_id')
-        order_id = request.POST.get('razorpay_order_id')
-        signature = request.POST.get('razorpay_signature')
-
-        if not (payment_id and order_id and signature):
-            return JsonResponse({'error': 'Missing payment details'})
-
         try:
-            # Verify the Razorpay payment signature
-            razorpay_client.utility.verify_payment_signature({
+            # Retrieve payment details
+            payment_id = request.POST.get('razorpay_payment_id')
+            order_id = request.POST.get('razorpay_order_id')
+            signature = request.POST.get('razorpay_signature')
+
+            if not (payment_id and order_id and signature):
+                return render(request, 'payment_failure.html', {'error': 'Payment details are missing.'})
+
+            # Verify Razorpay payment signature
+            params = {
                 'razorpay_order_id': order_id,
                 'razorpay_payment_id': payment_id,
                 'razorpay_signature': signature,
-            })
+            }
+            razorpay_client.utility.verify_payment_signature(params)
 
-            # Update order status in the database
+            # Update order status in database
             order = Order.objects.get(order_id=order_id)
             order.payment_status = 'Completed'
             order.save()
 
-            return render(request, 'payment_success.html', {'order': order})
+            # Render success page
+            return render(request, 'payment_success.html', {
+                'order_id': order.order_id,
+                'total_amount': order.total_amount,
+            })
 
         except razorpay.errors.SignatureVerificationError:
             return render(request, 'payment_failure.html', {
@@ -85,7 +92,7 @@ def payment_success(request):
                 'error': 'Order not found. Please contact support.'
             })
 
-    return JsonResponse({'status': 'Invalid request'})
+    return JsonResponse({'error': 'Invalid request'})
 
 
 def payment_success(request):
@@ -178,6 +185,47 @@ def register(request):
 # def menu_list(request):
 #     menu_items = MenuItem.objects.all()
 #     return render(request, 'menu_list.html', {'menu_items': menu_items})
+
+
+
+def generate_invoice(request, order_id):
+    try:
+        # Order details fetch pannunga
+        order = Order.objects.get(order_id=order_id, user=request.user)
+
+        # HTTP response setup for PDF
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="Invoice_{order.order_id}.pdf"'
+
+        # PDF canvas start
+        buffer = canvas.Canvas(response, pagesize=A4)
+        buffer.setFont("Helvetica", 12)
+
+        # Document content write
+        buffer.drawString(100, 800, "Invoice")
+        buffer.drawString(100, 780, f"Order ID: {order.order_id}")
+        buffer.drawString(100, 760, f"Customer: {order.user.username}")
+        buffer.drawString(100, 740, f"Date: {order.created_at.strftime('%Y-%m-%d %H:%M')}")
+
+        # Snack details iterate & write
+        y = 720
+        buffer.drawString(100, y, "Items:")
+        y -= 20
+        for item in order.items.all():  # Assuming ManyToMany relation with MenuItem
+            buffer.drawString(120, y, f"- {item.name} (₹{item.price})")
+            y -= 20
+
+        buffer.drawString(100, y - 20, f"Total Amount: ₹{order.total_amount}")
+
+        # Close PDF
+        buffer.showPage()
+        buffer.save()
+
+        return response
+
+    except Order.DoesNotExist:
+        return HttpResponse("Order not found.", status=404)
+
 @login_required
 def add_to_cart(request, item_id):
     item = MenuItem.objects.get(id=item_id)
@@ -211,20 +259,20 @@ def cart_detail(request):
     total = sum(item.total_price() for item in items)
     return render(request, 'cart_detail.html', {'items': items, 'total': total})
 
-# @login_required
-# def checkout(request):
-#     cart = Cart.objects.get(user=request.user)
-#     items = cart.cartitem_set.all()
-#     total = sum(item.total_price() for item in items)
+@login_required
+def checkout(request):
+    cart = Cart.objects.get(user=request.user)
+    items = cart.cartitem_set.all()
+    total = sum(item.total_price() for item in items)
 
-#     order = Order.objects.create(user=request.user, total_amount=total)
-#     for item in items:
-#         order.items.add(item.menu_item)
-#     order.save()
+    order = Order.objects.create(user=request.user, total_amount=total)
+    for item in items:
+        order.items.add(item.menu_item)
+    order.save()
 
-#     cart.cartitem_set.all().delete()
+    cart.cartitem_set.all().delete()
 
-#     return render(request, 'checkout.html', {'order': order})
+    return render(request, 'checkout.html', {'order': order})
 
 
 @login_required

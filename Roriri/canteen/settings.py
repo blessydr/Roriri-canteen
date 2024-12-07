@@ -132,3 +132,16 @@ RAZORPAY_KEY_SECRET = 'neuDSmZ2haMQA0eOFyad2HQv'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+
+
+
+# settings.py
+CSRF_TRUSTED_ORIGINS = [
+  ' https://www.roririsoft.com/'
+   'http://127.0.0.1',        # Add if testing locally
+    'http://localhost',        # Add if testing locally
+]
+
+
+# settings.py
+ALLOWED_HOSTS = ['roririsoft.com', '127.0.0.1', 'localhost']

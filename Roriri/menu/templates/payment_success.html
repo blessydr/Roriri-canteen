@@ -16,6 +16,12 @@
                 <p><strong>Order ID:</strong> {{ order_id }}</p>
                 <p><strong>Amount Paid:</strong> ₹{{ total_amount }}</p>
             </div>
+            <div class="details">
+                <p><strong>Order ID:</strong> {{ order_id }}</p>
+                <p><strong>Amount Paid:</strong> ₹{{ total_amount }}</p>
+            </div>
+            <a href="{% url 'generate_invoice' order_id=order_id %}" class="btn">Download Invoice</a>
+            
             <a href="/" class="btn">Go to Home</a>
         </div>
     </div>
