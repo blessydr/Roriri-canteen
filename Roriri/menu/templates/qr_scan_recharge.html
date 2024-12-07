@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Scanner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #4c83ff, #72e2ff);
+        }
+
+        #qr-reader {
+            width: 60%;
+            max-width: 400px;
+            border: 1px solid #333;
+            background-color: #fff;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #qr-input-file {
+            display: none;
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            cursor: pointer;
+        }
+        
+        .btn-back {
+            background-color: #007bff;
+            text-align: center;
+            color: white;
+            width: 50px;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+<div id="qr-reader">
+    <!-- QR code reader will be rendered here -->
+</div>
+
+<input type="file" id="qr-input-file" accept="image/*">
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+    // Function to handle redirection to recharge page with UUID
+    function handleRecharge(uuid) {
+        window.location.href = `/recharge/${uuid}/`;
+    }
+
+    // This function will be called when a QR code is scanned
+    function onScanSuccess(decodedText, decodedResult) {
+        handleRecharge(decodedText); // Redirect to recharge page with UUID
+    }
+
+    // Provide options for the QR code scanner
+    let html5QrcodeScanner = new Html5QrcodeScanner(
+        "qr-reader",
+        { fps: 10, qrbox: 250 }
+    );
+
+    // Start the scanner
+    html5QrcodeScanner.render(onScanSuccess);
+
+    // Handle file upload and scanning
+    document.getElementById('qr-input-file').addEventListener('change', (e) => {
+        if(e.target.files.length == 0) {
+            return;
+        }
+        let file = e.target.files[0];
+        // Use the scanning library to scan the file
+        Html5Qrcode.scanFile(file, /* showImage= */ true).then(decodedText => {
+            handleRecharge(decodedText); // Redirect to recharge page with UUID
+        }).catch(err => {
+            // handle the error if the QR code could not be scanned
+            console.log(`Error scanning file. Reason: ${err}`);
+        });
+    });
+</script>
+
+    <a href="{% url 'menu_list' %}" class="btn btn-back">Back</a>
+
+</body>
+</html>

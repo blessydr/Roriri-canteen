@@ -48,46 +48,43 @@ class CreateOrderView(View):
                 
                 
 
-class VerifyPaymentView(View):
-    def post(self, request, *args, **kwargs):
+def verify_payment(request):
+    if request.method == "POST":
         try:
-            # Parse JSON data from the request
-            data = json.loads(request.body)
-            payment_id = data.get("razorpay_payment_id")
-            order_id = data.get("razorpay_order_id")
-            signature = data.get("razorpay_signature")
-            amount = data.get("amount")
-            items = data.get("items")  # List of purchased item IDs
-            user_id = data.get("user_id")
+            # Get payment details from the frontend
+            payment_id = request.POST.get("razorpay_payment_id")
+            order_id = request.POST.get("razorpay_order_id")
+            signature = request.POST.get("razorpay_signature")
 
-            # Verify Razorpay payment signature
+            # Verify the payment using Razorpay's Python SDK
             params_dict = {
                 'razorpay_order_id': order_id,
                 'razorpay_payment_id': payment_id,
                 'razorpay_signature': signature,
             }
-            get_razorpay_client.utility.verify_payment_signature(params_dict)
 
-            # Create or update the order
-            user = get_object_or_404(User, id=user_id)
-            order = Order.objects.create(
-                user=user,
-                order_id=order_id,
-                total_amount=amount,
-                status="Completed"
-            )
-            for item_id in items:
-                item = get_object_or_404(MenuItem, id=item_id)
-                order.items.add(item)
+            razorpay_client.utility.verify_payment_signature(params_dict)
+
+            # Payment is verified successfully, now update the order status
+            order = Order.objects.get(order_id=order_id)
+            order.status = "Completed"
+            order.save()
 
             return JsonResponse({"status": "success", "message": "Payment verified and order saved."})
 
         except razorpay.errors.SignatureVerificationError:
             return JsonResponse({"error": "Payment verification failed"}, status=400)
+
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
-        
-        
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+@login_required
+def qr_scan(request):
+    return render(request, "qr_scan.html")
+
+
 def payment_form(request):
     return render(request, 'menu.html', {
         'RAZORPAY_KEY_ID': settings.RAZORPAY_KEY_ID
